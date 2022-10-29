@@ -279,3 +279,5 @@ TSWLatexianTemp*
 *.secret
 
 */venv/
+
+*.csv

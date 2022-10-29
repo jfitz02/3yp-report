@@ -1,2 +1,3 @@
 tweepy
 tweepy[async]
+wikipedia-api

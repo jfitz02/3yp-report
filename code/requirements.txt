@@ -1,3 +1,8 @@
 tweepy
 tweepy[async]
 wikipedia-api
+tensorflow
+pandas
+tensorflow-text
+sklearn
+nltk

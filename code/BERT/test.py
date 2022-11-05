@@ -42,17 +42,7 @@ l = tf.keras.layers.Dense(25, activation='sigmoid', name='classifier')(l)
 
 model = tf.keras.Model(inputs=[text_input], outputs = [l])
 
-[print(i.shape, i.dtype) for i in model.inputs]
-print()
-[print(o.shape, o.dtype) for o in model.outputs]
-print()
-print(y_train)
-print()
-[print(l.name, l.input_shape, l.dtype) for l in model.layers]
-
-input()
-
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.fit(X_train, y_train, epochs=2, batch_size=32)
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.fit(X_train, y_train, epochs=8, batch_size=256)
 
 print(model.evaluate(X_test, y_test))

@@ -35,8 +35,7 @@ categories = ["The arts", "Culture", "Entertainment",
 
 for category in categories:
     titles = get_category_members(category)
-    with open(f"./data/{category}.csv", "a", newline="", encoding="utf-8") as f:
-        print(titles)
+    with open(f"./data/raw/{category}.csv", "a", newline="", encoding="utf-8") as f:
         total_text = ""
         for title in titles:
             page = my_wiki.page(title)

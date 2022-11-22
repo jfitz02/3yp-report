@@ -281,3 +281,8 @@ TSWLatexianTemp*
 */venv/
 
 *.csv
+
+*.h5
+
+*.png
+*.jpg

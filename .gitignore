@@ -279,3 +279,10 @@ TSWLatexianTemp*
 *.secret
 
 */venv/
+
+*.csv
+
+*.h5
+
+*.png
+*.jpg

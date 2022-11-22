@@ -1,0 +1,362 @@
+\documentclass[a4paper,fleqn,10pt]{article}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+
+%%%%%%%%%%%%%%%%%%%%
+
+\input{../common/common.tex}
+\input{../common/project.tex}
+
+\assignment{Project Specification}
+
+%%%%%%%%%%%%%%%%%%%%
+
+\pagestyle{plain}
+\renewcommand{\headrulewidth}{0.0pt}
+
+\makeatletter
+\fancypagestyle{plain}{
+	\fancyhf{}
+	\fancyhead[R]{\textit{\@title} - \textit{\@assignment}}
+    \fancyhead[L]{\textit{\@author}}
+    \fancyfoot[C]{\thepage}
+}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input{../common/titlepage.tex}
+
+\pagestyle{plain}
+
+\subsection{Glossary}
+Bias - within this paper, bias refers to the over-representation of specified labelled topics. e.g. feed consisting of a lot of sport
+posts, or news posts.
+
+\section{Introduction and Motivation}
+\label{sec:intro}
+% political bias presented in social media has been a long running problem (REF).
+% Thanks to the development of recommender systems and the tendency of users to form Echo Chambers with like-minded individuals,
+% a lot of a users social media intake will be biased media leaning towards their ideologies (AGAIN PLEASE FIND REFERENCES).
+% If users were able to see the bias of their social media feed they would be receiving more informed information on any political matter.
+
+% There have been several attempts at quantifying bias including: analysing number of retweets of news providers during events;
+% Analysing a news pages bias by the audience they attract; and (What is done in "search bias quantification").
+% However, I have a more novel approach that should more closely align with the political allignment of political parties
+% instead of news sites. This should serve to be a more long-standing approach as (news companies?) have no ties with the political
+% bias they produce - it is instead decided by the news presenters/social media admins.
+
+Bias in social media can easily be seen on anyone's social media. In fact, I can show this with ease by just taking a look at my
+Instagram's "Explore page".
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=70mm]{../images/ig4u.jpg}
+    \caption{My Instagram for you page}
+    \label{fig:ig4u}
+\end{figure}
+
+Here we can notice a few common themes/biases: 1. Food, 2. Formula 1, 3. Memes. We want to be able to identify these biases for users
+so they can get an overview of the type of content they are receiving from social media.\\
+With social media recommender systems programmed to entice users with content they will enjoy (\cite{recommenderSystems}), it is common for similar groups of posts
+to be observed by a user if they have recently liked, commented, or viewed similar posts (\cite{instagram_how_nodate}).
+
+\section{Problem Statement}
+\label{sec:problem}
+
+As discussed in \Cref{sec:intro}, it is often the case that users are shown similar posts and not get a strong representation of posts
+from all aspects of social media. This in itself is not a major problem as users obviously want to see that content, hence why they
+like/view it. But it would be nice if users were able to see an analysis of the bias they observe in their social media feed (I know I
+want to see this information).\\\\
+This project will involve creating a set of labels as well as training/identifying identifiers for said label. We can then scan
+through a users social media looking for the identifiers to analyse the type of posts prevalent. We can then further develop on this
+information by performing further data analysis (how, will be determined when patterns emerge in testing).\\
+I have kept this description relatively concise and will develop further on it in my progress report/final report.
+
+% As discussed in \Cref{sec:intro}, political bias within social media is a big problem.
+% My intention is to be able to show users the bias they are presented to allow them to receive a well-rounded view
+% on political matters.
+
+% My Project Supervisor and I have discussed 2 main ways of perceiving bias within social media
+
+% \subsection{Political Party Spectrum}
+% \label{subsec:polspectrum}
+% My approach involves training a framework on uk parliamentary voting data, along with justified assumptions
+% of UK party political leanings, to understand how different political ideologies view key topics in politics.
+% We can then match these topics in tweets via a simple keyword scanner. When a keyword is found we can use a sentiment analysis
+% algorithm to decide whether the tweet is FOR or AGAINST the given topic. We can then compare their views to the views of
+% political parties to appropriately quantify the bias of the tweet.
+% \\
+% Pros
+% \begin{itemize}
+%     \item Can assign publicly-known labels to bias e.g. "Conservative", "labour", "liberal democrats".
+%     \item Makes use of publicly available information from votes.parliament.uk .
+%     \item Simple design
+% \end{itemize}
+
+% Cons
+% \begin{itemize}
+%     \item Political bias is not as straightforward as left/right or conservation/labour
+% \end{itemize}
+
+% \subsection{Key Topic Misinformation}
+% \label{subsec:misinformation}
+% Whenever something happens in the world, there is the facts, then there is what is posted on social media.
+% Users tend to exaggerate the facts in online posts causing a large amount of misinformation. This exaggeration creates bias.
+% We can assess how large the bias is by comparing it to the 'true' information of the event; seeing how far the misinformation
+% is from the true value, we can assign a bias value to that tweet.
+
+% Pros
+% \begin{itemize}
+%     \item No notion of left/right, removing unneeded assumptions.
+%     \item Easy to quantify bias from misinformation.
+%     \item Can produce a more detailed report of where misinformation was found.
+% \end{itemize}
+
+% Cons
+% \begin{itemize}
+%     \item Hard to portray this bias in an easily digestable way (With well-known labels).
+%     \item Would need to manually add true information when events occur.
+%     \item Unless using quantitative metrics in tweets, how do we measure the misinformation?
+% \end{itemize}
+
+% \subsection{Chosen Method}
+% To begin, I am going to pursue the \Cref{subsec:polspectrum} method. If given enough time, I will attempt to improve
+% this method by adding further methods of measuring bias/misinformation - possibly including \Cref{subsec:misinformation}.
+
+\section{Objectives}
+\label{sec:objectives}
+Due to the late changes of project, the objectives/requirements are not fully complete. The goal of these objectives
+is to give a general understanding to any stakeholders in this project and not to enforce a rigid set of requirements
+for the implementation of this project.
+\subsection{Development of my own framework}
+\label{subsec:framework}
+This is the first, and primary, section of my project. It will involve designing and implementing a framework to detect and
+display over-representation of topics.
+%Specific - Measurable - Achievable - Relevant - Time bound
+\begin{enumerate}
+    \item Be able to retrieve twitter homepage data from twitter API.
+    \item Generate a base list of topics we want to be able to detect.
+    \item Design a method of detecting different topics (here are some possible ideas)
+    \begin{itemize}
+        \item Generate a list of keywords as "features"
+        \item Using the features we can train a ML model to predict the topic given a set of features.
+    \end{itemize}
+    \item Framework should be able to handles a set of posts (10-15) and for each post assign a topic it is representing
+    \item We can then use the results to perform further analysis.
+    \begin{itemize}
+        \item This analysis will involve creating a set of rules for different social media accounts.
+        \item Run the rules on different social media accounts and see how the bias changes over time.
+    \end{itemize}
+    \item EXTENSION - take into account images when analysing posts
+    \begin{itemize}
+        \item First, use text detection to find text in the image, and add it to the post.
+        \item will require a method of object/item detection and labelling
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Comparison of my framework to others}
+Once creating my framework, I need to analyse and compare it against others.
+
+\begin{enumerate}
+    \item generate sample home twitter feeds.
+    \begin{enumerate}
+        \item need to generate varying levels of bias within this dataset.
+        \item generate erroneous test cases.
+        \begin{itemize}
+            \item No matching keywords.
+            \item No posts given.
+            \item Post containing no text.
+        \end{itemize}
+    \end{enumerate}
+    \item Determine accuracy of framework using sample twitter feeds.
+    \item Compare accuracy and other metrics with the given papers in \Cref{sec:papers}.
+    \item Conclude the pros and cons of the different frameworks.
+\end{enumerate}
+\subsection{Data Analysis}
+\label{subsec:analysis}
+This section describes what analysis could be done with the data as well as considerations needed to
+follow data privacy and data protection laws.
+\begin{enumerate}
+    \item Determine a system for rule generation.
+    \item Setup social media accounts to test the rules on.
+    \item Analyse the data to determine the bias of the social media accounts.
+    \item Run the rules every hour on the top 100 posts of each account, analyising the new topical bias.
+\end{enumerate}
+
+\subsection{Chrome Extension development}
+After completing the analysis, I could, as an extension, create a chrome extension to display topical bias when on social media.
+\\
+Functional Objectives:
+\begin{itemize}
+    \item MUST
+    \begin{enumerate}
+        \item Chrome extension must be visible when on Twitter
+        \item Chrome extension must send post information as a request to API 
+        \begin{enumerate}
+            \item Scrape the first x posts from the homepage
+            \item Using a GET/POST request, retrieve political alignment information from API
+        \end{enumerate}
+        \item API must be able to handle GET/POST requests giving post information
+        \begin{enumerate}
+            \item receive a list of posts via a GET/POST request
+            \item feed this list into the bias analysis framework
+            \item return the corresponding results back to the chrome extension
+        \end{enumerate}
+        \item API must calculate the biases as per \Cref{subsec:framework}
+        \item Chrome extension must display the bias information and further analytics via either numerical methods or visual methods.
+    \end{enumerate}
+    \item SHOULD
+    \begin{enumerate}
+        \item Chrome extension/API should be able to handle search results as well as home page.
+    \end{enumerate}
+    \item COULD
+    \begin{enumerate}
+        \item Chrome extension should be able to handle multiple social media sites
+    \end{enumerate}
+\end{itemize}
+
+Non-Functional Objectives
+\begin{itemize}
+    \item Chrome extension should update when social media site opened within 2 seconds
+    \item Chrome extension should always appear to be updating/working
+    \item Chrome extension should display when errors occur.
+    \item Information displayed should be easily understood by the general public of the UK.
+\end{itemize}
+
+\section{Testing}
+\label{sec:testing}
+Different forms of testing will be used throughout the development of this project.\\
+Black-/White-box unit tests will be created while designing/implementing the project. I plan on using test-driven development,
+so these tests will be necessary.\\
+As well as this it will be important to test the framework as described in \Cref{sec:objectives} to ensure we get useful
+information from the framework.\\
+I will also include Integration/System testing for the software engineering part of the project (chrome extension).
+
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Research}
+I will keep a written log of papers I read/use for this project as well as key areas of information found within the papers.\\
+
+\subsection{Technical Implementation}
+Python is the choice of language for the backend API as there are readily available libraries that provide the ability to
+create APIs, as well as access available social media APIs.\\
+JavaScript is currently planned to be used for the Chrome extension.\\\\
+The software methodology chosen for this project is a waterfall approach. I will not be sticking to a strict waterfall approach, however,
+as this could cause major disruptions in my time management if any changes to the requirements is needed. Any changes made to the
+specification during the development of the project must be added on in an agile-like manner to avoid missing deadlines.
+
+\section{Papers}
+\label{sec:papers}
+
+In this section I will give a brief analysis of papers that attempt to achieve a similar goal to this project, and what useful
+information I have come across while reading these papers.
+% On top of this I will highlight the key differences with my approach, and why further work is needed in this area.
+
+\subsection{Pythia - \cite{Pythia}}
+Pythia is an automated system for short text classification. It makes use of Wikipedia structure and articles to identify
+topics of posts.
+Essentially, "Wikipedia contains articles organized in various taxonomies, called categories". Pythia then goes on to use
+this information as their training data as well as handling sparseness in posts on social media.
+
+\subsection{Topic tracking of student-generated posts - \cite{TopicTracking}}
+This paper proposes a solution for determining valuable information/topics discussed in student forums on online courses.
+It uses a model called "Time Information-Emotion Behaviour Model" or otherwise called "TI-EBTM" to detect key topics discussions
+, keeping in mind the progress of time throughout the forum.\\
+Although this paper specializes in academic online forums, the approaches made could be relevant and useful for this project.
+
+\subsection{Topic classification of blogs - \cite{husby2012topic}}
+This paper uses Distant Supervision - 'an extension of the paradigm used by (\cite{snow}) for exploiting WordNet to extract hypernym (is-a) relations between entitities'
+- to get training data via Wikipedia articles. Then trains their own designed model on this data to be able to classify topics via a
+multi-class recognition model (69\% accuracy) and via a binary classification model (90\% accuracy).
+% \subsection{Media Bias Monitor: Quantifying Biases of Social Media New Outlets at Large Scale - \cite{mediabiasmonitor}}
+% This paper determines the bias of news sites according to the under-representation of specific political groups in the news sites audience.
+% If the audience of a news social media account consists of only left wing followers, then it is determined that the account is bias towards the left.\\
+% The publishers of this paper also created a webpage to help analyse the bias of different news sources: twitter-app.mpi-sws.org .
+% \\
+% This papers also gave a lot of statistics of the rise of news consumption via social media.
+
+% \subsection{Search Bias Quantification: Investigating Political Bias in Social Media and Web Search - \cite{searchbiasquant}}
+% This paper proposed a generalizable search bias quantification framework. This framework involved splitting search results
+% bias into 3 parts: Input bias, Output bias, and Ranking bias. This allowed them to compare how bias a search result was compared
+% to the bias inherently included by the users search query.\\
+
+% For individual queries the bias quantification works as such:\\
+% \begin{enumerate}
+%     \item Generate representative sets of Democratic and Republican users. As discussed in their paper they used the crowdsourced methodology to avoid the problem of users self-proclaiming their political opinions.
+%     \item Infer users topics of interests (Will discuss more on this).
+%     \item Matching users interests to interests of Democrats/Republicans (again, will discuss more).
+% \end{enumerate}
+
+% Need to figure out how this is then used.
+% \subsection{Quantifying Political Leaning from Tweets and Retweets - \cite{retweetspoliticallean}}
+% This paper draws a correspondance between tweeting and retweeting behaviour during major events.
+% It is stated that the number of retweets received by a tweeter during an event can be a signal of its political leaning.\\
+% The model works off of comparing retweets of different news sites during an event. Doing some analysis of the event
+% to determine which political side it leans towards, they determine political leanings of news sites by the number of retweets.
+
+% \subsection{Differences to my approach}
+% It is clear that the 3 given papers analyse bias in different ways - 2 of the papers solely analyse news sites.
+% The source of information used to generate the bias score is different between all the papers (retweets, users bias, audience bias)
+% My approach allows us to calculate the bias of any individuals twitter feed without determining the political ideologies of specific
+% users (which could be considered unethical).
+
+\subsection{BERT - \cite{bertmodelling}}
+This paper analyses BERT (as well as modified BERT models such as RoBERTa) and how they can be used for text classification.
+The data used in this paper is a set of scientific papers that are classified into 7 different categories.\\
+
+The paper shows that using a Feedforward Neural Network (FNN) on top of BERT can achieve a 91.76\% accuracy on the dataset.
+
+\section{Timeline}
+\label{sec:timeline}
+\begin{figure}[htbp]
+    \includegraphics[width=150mm]{../images/3yp timeline v2.png}
+    \caption{Project Timeline}
+    \label{fig:timeline}
+\end{figure}
+
+\section{Risk Management}
+\label{sec:risk}
+There are several factors that pose a risk to this project. Below is a table to illustrate what risks are prevalent, how big of an impact they will have, and how to counteract these risks.\\
+The scores are ranked from 1-5. 5=high, 1=low.
+\newpage
+\begin{table}[!h]
+    \begin{tabular}{|p{25mm}|p{20mm}|p{13mm}|p{55mm}|p{14mm}|}
+    \hline
+        Risk & Likelihood of Occurring & Impact to Project & Impact Mitigation & New Impact \\
+        \hline
+        Personal issue causing delay in schedule & 4 & 3 & I have purposefully planned my project with room to & 1 \\
+        \hline
+        Chosen design philosophy fails to produce useful bias metrics & 3 & 4 & Firstly, this project is mainly research based, so no matter the outcome we will gain something from the comparison between approaches. For the Software side of the project we could instead use an already known method if ours does not work. & 2 \\
+        \hline
+        Changes to Twitter API & 2 & 1 & Any changes to the API should not dramatically affect this project. At worse it could involve some minor code refactoring to correct endpoints/REST queries. & 1\\
+        \hline
+        Laptop dies & 1 & 5 & Using git+github for version control throughout this project (for code and report), no matter what happens to my own laptop, the codebase will be accessible from any machine & 1\\
+        \hline
+        Unable to recreate other papers methods & 4 & 4 & Instead, I can take the papers results as true (after analysis of results credibility). I can also just create the chrome extension using my own method & 1\\
+        \hline
+        inability to gather enough users to generate data for analysis & 2 & 4 & Can perform analysis based on other metrics than demographics (e.g. who they follow, what the like, etc.) This data can be generated artificially & 2\\
+        \hline
+        Twitter website/API being taken off the internet & 2 & 5 & This is a very unlikely scenario, but if it were to happen, I would have to find another source of data to analyse. & 1\\
+    \end{tabular}
+    \caption{Possible risks}
+    \label{tab:risk}
+\end{table}
+\newpage
+
+\section{Ethical/Legal Considerations}
+As mentioned in \Cref{subsec:analysis} when storing information of users - such as demographics, identifiable information, and social media usage -
+It is important to ensure we follow relevant GDPR and data protection laws.\\
+When gathering data, we will also required volunteers. The volunteers will need to have a thorough understanding of what
+information we are gathering and we need to ensure we use this data lawfully.
+
+\newpage
+\bibliographystyle{../common/plainnat}
+\bibliography{../common/bibliography}
+
+\end{document}

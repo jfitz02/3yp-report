@@ -6,3 +6,4 @@ pandas
 tensorflow-text
 sklearn
 nltk
+praw

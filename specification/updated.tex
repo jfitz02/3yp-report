@@ -35,7 +35,6 @@
 \pagestyle{plain}
 
 \subsection{Glossary}
-Tweet - although typically associated with twitter, in this paper a tweet is any form of post on a social media website.\\
 Bias - within this paper, bias refers to the over-representation of specified labelled topics. e.g. feed consisting of a lot of sport
 posts, or news posts.
 
@@ -147,14 +146,15 @@ display over-representation of topics.
         \item Generate a list of keywords as "features"
         \item Using the features we can train a ML model to predict the topic given a set of features.
     \end{itemize}
-    \item Framework should be able to handles a set of posts (25-50) and for each post assign a topic it is representing
-    \item We can then use the results to perform further analysis to suggest new topics/similar users.
+    \item Framework should be able to handles a set of posts (10-15) and for each post assign a topic it is representing
+    \item We can then use the results to perform further analysis.
     \begin{itemize}
-        \item This analysis could involve gathering data from multiple demographics of social media users.
-        \item Finding patterns within these demographics.
+        \item This analysis will involve creating a set of rules for different social media accounts.
+        \item Run the rules on different social media accounts and see how the bias changes over time.
     \end{itemize}
     \item EXTENSION - take into account images when analysing posts
     \begin{itemize}
+        \item First, use text detection to find text in the image, and add it to the post.
         \item will require a method of object/item detection and labelling
     \end{itemize}
 \end{enumerate}
@@ -169,30 +169,41 @@ Once creating my framework, I need to analyse and compare it against others.
         \item generate erroneous test cases.
         \begin{itemize}
             \item No matching keywords.
-            \item No tweets given.
-            \item Tweet containing no text.
+            \item No posts given.
+            \item Post containing no text.
         \end{itemize}
     \end{enumerate}
     \item Determine accuracy of framework using sample twitter feeds.
     \item Compare accuracy and other metrics with the given papers in \Cref{sec:papers}.
     \item Conclude the pros and cons of the different frameworks.
 \end{enumerate}
+\subsection{Data Analysis}
+\label{subsec:analysis}
+This section describes what analysis could be done with the data as well as considerations needed to
+follow data privacy and data protection laws.
+\begin{enumerate}
+    \item Determine a system for rule generation.
+    \item Setup social media accounts to test the rules on.
+    \item Analyse the data to determine the bias of the social media accounts.
+    \item Run the rules every hour on the top 100 posts of each account, analyising the new topical bias.
+\end{enumerate}
+
 \subsection{Chrome Extension development}
-After completing the analysis, I will choose a given framework and create a chrome extension to display social media bias.
+After completing the analysis, I could, as an extension, create a chrome extension to display topical bias when on social media.
 \\
 Functional Objectives:
 \begin{itemize}
     \item MUST
     \begin{enumerate}
         \item Chrome extension must be visible when on Twitter
-        \item Chrome extension must send tweet information as a request to API 
+        \item Chrome extension must send post information as a request to API 
         \begin{enumerate}
-            \item Scrape the first x tweets from the homepage
+            \item Scrape the first x posts from the homepage
             \item Using a GET/POST request, retrieve political alignment information from API
         \end{enumerate}
-        \item API must be able to handle GET/POST requests giving tweet information
+        \item API must be able to handle GET/POST requests giving post information
         \begin{enumerate}
-            \item receive a list of tweets via a GET/POST request
+            \item receive a list of posts via a GET/POST request
             \item feed this list into the bias analysis framework
             \item return the corresponding results back to the chrome extension
         \end{enumerate}
@@ -216,16 +227,6 @@ Non-Functional Objectives
     \item Chrome extension should display when errors occur.
     \item Information displayed should be easily understood by the general public of the UK.
 \end{itemize}
-
-\subsection{Data Analysis}
-\label{subsec:analysis}
-This section describes what analysis could be done with the data as well as considerations needed to
-follow data privacy and data protection laws.
-\begin{enumerate}
-    \item Users and user demographics should be anonymized as to avoid storing identifiable sensitive data.
-    \item Clustering could be performed to generate sets of like-minded individuals.
-    \item Vector-Distances could be used to detect closely related topics that are under-represented in a specific individuals feed.
-\end{enumerate}
 
 \section{Testing}
 \label{sec:testing}
@@ -304,10 +305,17 @@ multi-class recognition model (69\% accuracy) and via a binary classification mo
 % The source of information used to generate the bias score is different between all the papers (retweets, users bias, audience bias)
 % My approach allows us to calculate the bias of any individuals twitter feed without determining the political ideologies of specific
 % users (which could be considered unethical).
+
+\subsection{BERT - \cite{bertmodelling}}
+This paper analyses BERT (as well as modified BERT models such as RoBERTa) and how they can be used for text classification.
+The data used in this paper is a set of scientific papers that are classified into 7 different categories.\\
+
+The paper shows that using a Feedforward Neural Network (FNN) on top of BERT can achieve a 91.76\% accuracy on the dataset.
+
 \section{Timeline}
 \label{sec:timeline}
 \begin{figure}[htbp]
-    \includegraphics[width=150mm]{../images/3yp timeline.png}
+    \includegraphics[width=150mm]{../images/3yp timeline v2.png}
     \caption{Project Timeline}
     \label{fig:timeline}
 \end{figure}
@@ -334,6 +342,7 @@ The scores are ranked from 1-5. 5=high, 1=low.
         \hline
         inability to gather enough users to generate data for analysis & 2 & 4 & Can perform analysis based on other metrics than demographics (e.g. who they follow, what the like, etc.) This data can be generated artificially & 2\\
         \hline
+        Twitter website/API being taken off the internet & 2 & 5 & This is a very unlikely scenario, but if it were to happen, I would have to find another source of data to analyse. & 1\\
     \end{tabular}
     \caption{Possible risks}
     \label{tab:risk}

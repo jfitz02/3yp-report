@@ -22,24 +22,18 @@ def preprocess(text):
     text = seperate_sentences(text)
     return text
 
-categories = {"Arts":"The arts", "Culture":"Culture", "Entertainment":"Entertainment",
-                "Games":"Games", "MassMedia":"Mass media", "Philosophy":"Philosophy",
-                "Religion":"Religion", "Science":"Science", "Society":"Society",
-                "Sports":"Sports", "Technology":"Technology", "Law":"Law",
-                "History":"History", "Geography":"Geography",
-                "Esports":"Esports", "VideoGames":"Video games", "Music":"Music",
-                "Medicine":"Medicine", "Business":"Business", "PersonalLife":"Personal life",
-                "Foods":"Foods", "Disasters":"Disasters", "Nature":"Nature",
-                "Education":"Education", "Statistics":"Statistics"}
+with open("../topics.txt", "r") as f:
+    categories = f.read().split("\n")
+
 
 for category in categories:
-    with open(f"./data/raw/{categories[category]}.csv", "r", encoding="utf-8") as f:
+    with open(f"./data/raw/{category}.csv", "r", encoding="utf-8") as f:
         reader = csv.reader(f,delimiter="\n")
         text = ""
         for row in reader:
             text += row[0]
         text = preprocess(text)
-        with open(f"./data/preprocessed_BERT/{categories[category]}.csv", "w", encoding="utf-8") as f:
+        with open(f"./data/preprocessed_BERT/{category}.csv", "w", encoding="utf-8") as f:
             for sentence in text:
                 f.write(f"{category}\t{sentence}")
                 f.write("\n")

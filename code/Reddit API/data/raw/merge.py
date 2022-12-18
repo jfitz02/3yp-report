@@ -7,17 +7,9 @@ import pandas as pd
 #fix field larger than field limit (131072)
 csv.field_size_limit(524288)
 
-categories = ["Culture", "Entertainment",
-              "Games", "News", "Philosophy",
-              "Religion", "Science",
-              "Sports", "Technology", "Law",
-              "History", "Geography",
-              "Esports", "VideoGames", "Music",
-              "Medicine", "Business",
-              "Foods", "Disasters", "Nature",
-              "Education", "Statistics",
-              "Politics", "Economics", "ComputerScience",
-              "Mathematics"]
+with open("../../../topics.txt", "r") as f:
+    categories = f.read().split("\n")
+    
 
 with open("data.csv", "w", encoding="utf-8") as f:
     for category in categories:

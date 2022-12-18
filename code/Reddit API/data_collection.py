@@ -47,9 +47,8 @@ reddit = praw.Reddit(client_id=client_id,
 
 print(reddit.user.me())
 
-categories = [
-              "Politics", "Economics", "ComputerScience",
-              "Mathematics"]
+with open("../topics.txt", "r") as f:
+    categories = f.read().split("\n")
 
 # categories = ["ComputerScience", "MachineLearning"]
 

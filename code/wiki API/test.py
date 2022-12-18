@@ -23,15 +23,10 @@ def get_category_members(category, level=0, max_level=1):
 
     return titles
 
-categories = ["The arts", "Culture", "Entertainment",
-              "Games", "Mass media", "Philosophy",
-              "Religion", "Science", "Society",
-              "Sports", "Technology", "Law",
-              "History", "Geography",
-              "Esports", "Video games", "Music",
-              "Medicine", "Business", "Personal life",
-              "Foods", "Disasters", "Nature",
-              "Education", "Statistics"]
+#get categories from ../topics.txt
+with open("../topics.txt", "r") as f:
+    categories = f.read().split("\n")
+
 
 for category in categories:
     titles = get_category_members(category)

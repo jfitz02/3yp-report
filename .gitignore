@@ -290,4 +290,4 @@ TSWLatexianTemp*
 *.wav
 
 # Ignore everything in any directory having /logs/ in its path
-*/logs/*
+code/BERT/RoBERTa/logs/*

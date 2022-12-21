@@ -66,4 +66,5 @@ class TweetProcessor:
             words += self._process_audio(tweet)
 
         words += tweet.text
+        label = self._roberta_call(words)
         return label

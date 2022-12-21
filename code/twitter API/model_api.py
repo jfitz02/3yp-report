@@ -1,6 +1,6 @@
 import pandas as pd
 import datasets
-from transformers import RobertaTokenizerFast, RobertaForSequenceClassification, Trainer, TrainingArguments, Wav2Vec2ForCTC, Wav2Vec2Tokenizer
+from transformers import RobertaTokenizerFast, RobertaForSequenceClassification, Wav2Vec2ForCTC, Wav2Vec2Tokenizer, pipeline
 import torch.nn as nn
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -22,6 +22,9 @@ class TweetProcessor:
         self.wav2vec2_model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h")
         self.pipeline = Pipeline(detector=Detector(), recognizer=Recognizer())
 
+        self.temp_model = pipeline("text-classification", model="jonaskoenig/topic_classification_04",
+                                  tokenizer="jonaskoenig/topic_classification_04")
+
     def _process_image(self, image):
         preds = self.pipeline.recognize(images=[image])
         words = [pred for pred, _ in preds]
@@ -39,24 +42,12 @@ class TweetProcessor:
         return transcription
 
     def _roberta_call(self, text):
-        t_data = self.roberta_tokenizer(text, truncation=True, padding=True)
-        input_ids = []
-        attention_masks = []
-        for i in range(len(t_data["input_ids"])):
-            input_ids.append(t_data['input_ids'][i])
-            attention_masks.append(t_data['attention_mask'][i])
+        max_label_count = 1
+        topicbert = pipeline("text-classification", model="jonaskoenig/topic_classification_04",
+                                        tokenizer="jonaskoenig/topic_classification_04")
+        top = topicbert(text, top_k=max_label_count)
 
-        # convert to tensors
-        input_ids = torch.tensor(input_ids)
-        attention_masks = torch.tensor(attention_masks)
-
-        # get predictions
-        outputs = self.roberta_model(input_ids, attention_mask=attention_masks)
-        logits = outputs.logits
-        predicted_ids = torch.argmax(logits, dim=-1)
-        label = predicted_ids.tolist()
-
-        return label
+        return top[0]['label']
 
     def get_topic(self, tweet):
         words = ""

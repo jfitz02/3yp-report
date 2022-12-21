@@ -24,8 +24,8 @@ class DataCollator:
         )
         return client
 
-    def get_tweets(self, count:int):
-        tweets = self.client.get_home_timeline(count)
+    def get_tweets(self):
+        tweets = self.client.get_home_timeline()
         return tweets
 
     def like_tweet(self, tweet_id:int):

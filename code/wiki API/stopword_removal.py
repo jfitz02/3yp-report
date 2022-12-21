@@ -25,15 +25,3 @@ def preprocess(text):
 with open("../topics.txt", "r") as f:
     categories = f.read().split("\n")
 
-
-for category in categories:
-    with open(f"./data/raw/{category}.csv", "r", encoding="utf-8") as f:
-        reader = csv.reader(f,delimiter="\n")
-        text = ""
-        for row in reader:
-            text += row[0]
-        text = preprocess(text)
-        with open(f"./data/preprocessed_BERT/{category}.csv", "w", encoding="utf-8") as f:
-            for sentence in text:
-                f.write(f"{category}\t{sentence}")
-                f.write("\n")

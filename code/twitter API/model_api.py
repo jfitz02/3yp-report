@@ -1,18 +1,8 @@
-import pandas as pd
-import datasets
 from transformers import RobertaTokenizerFast, RobertaForSequenceClassification, Wav2Vec2ForCTC, Wav2Vec2Tokenizer, pipeline
-import torch.nn as nn
 import torch
-from torch.utils.data import Dataset, DataLoader
-import numpy as np
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from tqdm import tqdm
-import os
 from keras_ocr.detection import Detector
-from keras_ocr.tools import drawAnnotations
 from keras_ocr.pipeline import Pipeline
 from keras_ocr.recognition import Recognizer
-from keras_ocr.tools import read
 
 class TweetProcessor:
     def __init__(self, num_labels:int):
@@ -49,13 +39,13 @@ class TweetProcessor:
 
         return top[0]['label']
 
-    def get_topic(self, tweet):
+    def get_topic(self, text, image=None, audio=None):
         words = ""
-        if False: #if image
-            words += self._process_image(tweet)
-        if False: #if audio
-            words += self._process_audio(tweet)
+        if image:
+            words += self._process_image(image)
+        if audio:
+            words += self._process_audio(audio)
 
-        words += tweet.text
+        words += text.text
         label = self._roberta_call(words)
         return label

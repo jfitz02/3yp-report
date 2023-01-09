@@ -16,17 +16,20 @@ class DataCollator:
         return token_dict
 
     def get_client(self):
-        client = tweepy.Client(
-            consumer_key = self.tokens["consumer_key"],
-            consumer_secret = self.tokens["consumer_secret"],
-            access_token = self.tokens["access_token"],
-            access_token_secret = self.tokens["access_token_secret"]
-        )
-        return client
+        api = tweepy.API(auth=tweepy.OAuthHandler(self.tokens["consumer_key"],
+                                                    self.tokens["consumer_secret"],
+                                                    self.tokens["access_token"],
+                                                    self.tokens["access_token_secret"]))
+
+        return api
 
     def get_tweets(self):
-        tweets = self.client.get_home_timeline()
+        tweets = self.client.home_timeline(tweet_mode="extended")
         return tweets
+
+    def get_tweet(self, tweet_id:int):
+        tweet = self.client.get_status(tweet_id, tweet_mode="extended")
+        return tweet
 
     def like_tweet(self, tweet_id:int):
         self.client.like(tweet_id)

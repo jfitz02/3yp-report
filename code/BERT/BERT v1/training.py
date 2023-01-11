@@ -7,13 +7,14 @@ import tensorflow_hub as hub
 import tensorflow_text as text
 import numpy as np
 
-with open('../topics.txt', 'r') as f:
+with open('../../topics.txt', 'r') as f:
     categories = f.read().splitlines()
     mapping = {categories[i].lower():[0 for _ in range(i)]+[1]+[0 for _ in range(len(categories)-(i+1))] for i in range(len(categories))}
 
 print(mapping)
-df = pd.read_csv('./testdata/data.csv', sep=',', names=["Category", "Sentence"])
-
+df = pd.read_csv('../testdata/data_combined_24.csv', sep=',', names=["Category", "Sentence"])
+# remove any rows who's label is not in categories
+df = df[df.Category.isin(categories)]
 y_train = np.array([mapping[cat] for cat in df.Category])
 
 
@@ -32,52 +33,52 @@ l = tf.keras.layers.Dense(len(categories), activation='sigmoid', name='classifie
 
 model = tf.keras.Model(inputs=[text_input], outputs = [l])
 
-# model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-# model.fit(X_train, y_train, epochs=6, batch_size=32)
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.fit(X_train, y_train, epochs=6, batch_size=32)
 
-# #save model
-# model.save('model_2.h5')
+#save model
+model.save('model_2.h5')
 
-# #save weights
-# model.save_weights('weights_2.h5')
+#save weights
+model.save_weights('weights_2.h5')
 
-model.load_weights('weights_2.h5')
+# model.load_weights('weights_2.h5')
 
-#display confusion matrix
-from sklearn.metrics import confusion_matrix
-import seaborn as sn
-import pandas as pd
-import matplotlib.pyplot as plt
+# #display confusion matrix
+# from sklearn.metrics import confusion_matrix
+# import seaborn as sn
+# import pandas as pd
+# import matplotlib.pyplot as plt
 
-#get train data from ./testdata/data_wiki.csv
-df = pd.read_csv('./testdata/data_wiki.csv', sep='\t', names=["Category", "Sentence"])
+# #get train data from ./testdata/data_wiki.csv
+# df = pd.read_csv('./testdata/data_wiki.csv', sep='\t', names=["Category", "Sentence"])
 
-x_test = df.Sentence.to_numpy()
-y_test = np.array([mapping[cat.lower()] for cat in df.Category])
+# x_test = df.Sentence.to_numpy()
+# y_test = np.array([mapping[cat.lower()] for cat in df.Category])
 
-y_pred = model.predict(x_test)
-y_pred = np.argmax(y_pred, axis=1)
-y_test = np.argmax(y_test, axis=1)
+# y_pred = model.predict(x_test)
+# y_pred = np.argmax(y_pred, axis=1)
+# y_test = np.argmax(y_test, axis=1)
 
-cm = confusion_matrix(y_test, y_pred)
-df_cm = pd.DataFrame(cm, index = [i for i in categories],
-                    columns = [i for i in categories])
+# cm = confusion_matrix(y_test, y_pred)
+# df_cm = pd.DataFrame(cm, index = [i for i in categories],
+#                     columns = [i for i in categories])
 
-plt.figure(figsize = (10,7))
-sn.heatmap(df_cm, annot=True)
+# plt.figure(figsize = (10,7))
+# sn.heatmap(df_cm, annot=True)
 
-plt.show()
+# plt.show()
 
-plt.savefig('confusion_matrix.png')
+# plt.savefig('confusion_matrix.png')
 
-while(True):
-    sentence = input("Enter a sentence: ")
-    prediction = model.predict([sentence])
-    prediction = np.argmax(prediction, axis=1)
+# while(True):
+#     sentence = input("Enter a sentence: ")
+#     prediction = model.predict([sentence])
+#     prediction = np.argmax(prediction, axis=1)
     
-    #get key where value is equal to prediction
-    for key, value in mapping.items():
-        if value == prediction:
-            print(key)
-            break
-    print(prediction)
+#     #get key where value is equal to prediction
+#     for key, value in mapping.items():
+#         if value == prediction:
+#             print(key)
+#             break
+#     print(prediction)

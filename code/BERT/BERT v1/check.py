@@ -15,44 +15,48 @@ preprocessed_text = best_preprocess(text_input)
 outputs = best_model(preprocessed_text)
 
 l = tf.keras.layers.Dropout(0.1, name='dropout')(outputs['pooled_output'])
-l = tf.keras.layers.Dense(512, activation='relu', name='dense')(l)
-l = tf.keras.layers.Dense(26, activation='sigmoid', name='classifier')(l)
+l = tf.keras.layers.Dense(23, activation='sigmoid', name='classifier')(l)
 
 model = tf.keras.Model(inputs=[text_input], outputs = [l])
 model.load_weights('weights_2.h5')
 
 
-with open('../topics.txt', 'r') as f:
+with open('../../topics.txt', 'r') as f:
     categories = f.read().splitlines()
+    mapping = {categories[i].lower():[0 for _ in range(i)]+[1]+[0 for _ in range(len(categories)-(i+1))] for i in range(len(categories))}
 
-#get userinput for sentence
+df = pd.read_csv('../testdata.csv', sep=',', names=["Category", "Sentence"])
 
-# sentence = input("Enter a sentence: ")
+y_test = np.array([mapping[cat] for cat in df.Category])
 
-#predict category
-
-encoder = LabelEncoder()
-
-df = pd.read_csv('./testdata/data.csv', sep=',', names=["Category", "Sentence"])
-
-
-encoder.fit(df["Category"])
-
-testdata = pd.read_csv('./testdata/data_wiki.csv', sep='\t', names=["Category", "Sentence"])
+X_test = df.Sentence.to_numpy()
 
 # test the data on model
 
+y_pred = model.predict(X_test)
 
-while(True):
-    sentence = input("Enter a sentence: ")
-    prediction = model.predict([sentence])
-    #make barchart of confidence for each category
-    #need to make sure that the categories are in the same order as the model
-    plt.bar(encoder.inverse_transform([i for i in range(len(categories))]), prediction[0])
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    # plt.show()
-    plt.savefig('barchart.png')
-    prediction = np.argmax(prediction, axis=1)
-    prediction = encoder.inverse_transform(prediction)
-    print(prediction)
+y_pred = np.argmax(y_pred, axis=1)
+
+y_test = np.argmax(y_test, axis=1)
+
+#calculate accuracy
+from sklearn.metrics import accuracy_score
+print(accuracy_score(y_test, y_pred))
+
+#display confusion matrix
+from sklearn.metrics import confusion_matrix
+import seaborn as sn
+
+cm = confusion_matrix(y_test, y_pred)
+
+df_cm = pd.DataFrame(cm, index = [i for i in categories],
+                    columns = [i for i in categories])
+plt.figure(figsize = (10,7))
+
+sn.heatmap(df_cm, annot=True)
+
+#make UI fit to plot
+
+plt.tight_layout()
+
+plt.show()

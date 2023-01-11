@@ -7,10 +7,14 @@ from keras_ocr.detection import Detector
 from keras_ocr.pipeline import Pipeline
 from keras_ocr.recognition import Recognizer
 from keras_ocr.tools import read as kread
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import os
 
 class TweetProcessor:
-    def __init__(self, labels:list(str)):
+    def __init__(self, directory, labels):
         self.labels = labels
+        self.directory = directory
         self.topic_tokenizer = AutoTokenizer.from_pretrained("MrFitzmaurice/roberta-finetuned-topic-3")
         self.topic_model = AutoModelForSequenceClassification.from_pretrained("MrFitzmaurice/roberta-finetuned-topic-3")
         self.wav2vec2_tokenizer = Wav2Vec2Tokenizer.from_pretrained("facebook/wav2vec2-base-960h")
@@ -20,11 +24,11 @@ class TweetProcessor:
     def _process_image(self, image_url):
         # get image
         r = requests.get(image_url)
-        with open("test.jpg", "wb") as f:
+        with open(f"media_store/jpg/{image_url[-10:]}.jpg", "wb") as f:
             f.write(r.content)
 
         # get test image
-        image = kread("test.jpg")
+        image = kread(f"media_store/jpg/{image_url[-10:]}.jpg")
         preds = self.pipeline.recognize(images=[image])[0]
         words = [pred for pred, _ in preds]
         # #turn into string
@@ -34,13 +38,13 @@ class TweetProcessor:
 
     def _process_audio(self, audio):
         r = requests.get(audio)
-        with open("test.mp4", "wb") as f:
+        with open(f"media_store/mp4/{audio[-10:]}.mp4", "wb") as f:
             f.write(r.content)
 
-        clip = mp.VideoFileClip("test.mp4")
-        clip.audio.write_audiofile("test.wav")
+        clip = mp.VideoFileClip(f"media_store/mp4/{audio[-10:]}.mp4")
+        clip.audio.write_audiofile(f"media_store/wav/{audio[-10:]}.wav")
 
-        audio, _ = librosa.load("test.wav", sr=16000)
+        audio, _ = librosa.load(f"media_store/wav/{audio[-10:]}.wav", sr=16000)
         input_values = self.wav2vec2_tokenizer(audio, return_tensors="pt").input_values
         logits = self.wav2vec2_model(input_values).logits
         predicted_ids = torch.argmax(logits, dim=-1)
@@ -65,3 +69,11 @@ class TweetProcessor:
         words += text
         label = self._roberta_call(words)
         return label
+
+
+    def generate_wordcloud(self, text):
+        # Create and generate a word cloud image:
+        wordcloud = WordCloud(width=335, height=370).generate(text)
+        print(os.getcwd())
+        # save the wordcloud
+        wordcloud.to_file(f"media_store/wordclouds/{text[-10:]}.png")

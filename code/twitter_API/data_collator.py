@@ -34,7 +34,10 @@ class DataCollator:
     def find_media_url(self, tweet):
         media_url = ""
         content_type = ""
-        if not ("media" in tweet.extended_entities):
+        try:
+            if not ("media" in tweet.extended_entities):
+                return None
+        except AttributeError:
             return None
         
         media = tweet.extended_entities["media"][0]

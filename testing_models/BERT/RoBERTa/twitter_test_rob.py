@@ -1,10 +1,13 @@
 #73%
 
+import pandas as pd
+import os
+import sys
+
+sys.path.insert(0, "C:/Users/jfitz/OneDrive/Documents/3rd year project/code/twitter_API")
 
 from twitter_API import model_api, data_collator
 
-import pandas as pd
-import os
 
 with open("../../topics.txt", "r") as f:
     topics = f.read().splitlines()

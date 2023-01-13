@@ -15,7 +15,7 @@ preprocessed_text = best_preprocess(text_input)
 outputs = best_model(preprocessed_text)
 
 l = tf.keras.layers.Dropout(0.1, name='dropout')(outputs['pooled_output'])
-l = tf.keras.layers.Dense(23, activation='sigmoid', name='classifier')(l)
+l = tf.keras.layers.Dense(20, activation='sigmoid', name='classifier')(l)
 
 model = tf.keras.Model(inputs=[text_input], outputs = [l])
 model.load_weights('weights_2.h5')
@@ -26,6 +26,9 @@ with open('../../topics.txt', 'r') as f:
     mapping = {categories[i].lower():[0 for _ in range(i)]+[1]+[0 for _ in range(len(categories)-(i+1))] for i in range(len(categories))}
 
 df = pd.read_csv('../testdata.csv', sep=',', names=["Category", "Sentence"])
+
+#remove rows whose category is not in categories
+df = df[df.Category.isin(categories)]
 
 y_test = np.array([mapping[cat] for cat in df.Category])
 

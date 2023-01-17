@@ -15,7 +15,6 @@ class TestStreaming(tweepy.StreamingClient):
         #remove emojis and new line characters
         tweettext = tweet.text.replace("\n", " ")
         tofile = tweettext + " " + str(tweet.id)+"\n"
-        print(tofile)
         with open(self.twitterfname, 'r', encoding="utf-8") as f:
             exists = (tofile in f.read())
 
@@ -70,7 +69,11 @@ class DataCollator:
             for line in f:
                 parts = line.split(" ")
                 tweet_id = int(parts[-1])
-                tweets.append(self.get_tweet(tweet_id))
+                try:
+                    tweets.append(self.get_tweet(tweet_id))
+                except tweepy.errors.NotFound:
+                    print(f"{tweet_id} not found")
+                    pass
 
         return tweets
 

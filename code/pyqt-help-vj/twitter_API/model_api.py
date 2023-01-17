@@ -61,7 +61,7 @@ class TweetProcessor:
         output = self.topic_model(**input_ids)
         pred = output.logits.argmax().item()
 
-        return self.labels[pred]
+        return pred
 
     def get_topic(self, text, image_url=None, audio_url=None):
         words = ""
@@ -74,8 +74,8 @@ class TweetProcessor:
 
         if len(words) > 512:
             words = words[:512]
-        label = self._roberta_call(words)
-        return label
+        pred = self._roberta_call(words)
+        return pred
 
 
     def generate_wordcloud(self, text):

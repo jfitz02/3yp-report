@@ -2,6 +2,10 @@ import pandas as pd
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
+from twitter_API.data_collator import DataCollator
+
+dc = DataCollator("../twitter_API/pass.secret")
+
 id2label = {
     0: "medicine",
     1: "business",
@@ -34,7 +38,7 @@ model = AutoModelForSequenceClassification.from_pretrained("MrFitzmaurice/robert
 
 # load test data
 
-df = pd.read_csv("../testdata.csv", delimiter=",", header=None, names=["label", "text"])
+df = pd.read_csv("../twittertest.csv", delimiter=",", header=None, names=["label", "text"])
 
 #remove rows who's label is not in labels2id
 
@@ -48,7 +52,9 @@ correct = 0
 
 for index, row in df.iterrows():
     # tokenize the text
-    inputs = tokenizer(row["text"], return_tensors="pt")
+    input_text = dc.get_tweet(row["text"]).full_text
+    print(row["text"])
+    inputs = tokenizer(input_text, return_tensors="pt")
     outputs = model(**inputs)
 
     #get the predicted label

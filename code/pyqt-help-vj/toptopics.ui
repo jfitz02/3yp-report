@@ -72,7 +72,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Twitter Wordcloud</string>
+     <string>Twitter Hot Topics</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>

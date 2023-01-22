@@ -153,6 +153,7 @@ class DataCollator:
     def database_setup(self):
         self.c.execute("""CREATE TABLE IF NOT EXISTS tweetset (
             tweetset_id INTEGER PRIMARY KEY,
+            twitter_tweets BOOLEAN,
             medicine_val FLOAT,
             business_val FLOAT,
             videogames_val FLOAT,
@@ -212,14 +213,19 @@ class DataCollator:
             tweet_info.append((tweet, self.labels[np.argmax(pred)]))
             predictions += pred
 
-        tweetset_id = self.db_create_tweetset(predictions)
+        predictions /= len(tweets)
+
+        tweetset_id = self.db_create_tweetset(predictions, False)
         for tweet in tweet_info:
             self.db_create_tweet(tweetset_id, tweet[0], tweet[1])
 
         return tweetset_id
 
-    def db_create_tweetset(self, preds):
-        self.c.execute("INSERT INTO tweetset VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", list(preds))
+    def db_create_tweetset(self, preds, twitter_tweets):
+        preds = list(preds)
+        preds.insert(0, twitter_tweets)
+        print(preds)
+        self.c.execute("INSERT INTO tweetset VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", preds)
         self.conn.commit()
         return self.c.lastrowid
 
@@ -238,11 +244,17 @@ class DataCollator:
         data = self.c.fetchall()[0]
         topics = {}
         for i in range(len(self.labels)):
-            topics[self.labels[i]] = data[i+1]
+            topics[self.labels[i]] = data[i+2]
+
+        print(topics)
         return topics
 
     def db_get_tweets(self, tweetset_id):
         self.c.execute("SELECT tweet_text FROM tweets WHERE tweetset_id=?", (tweetset_id,))
+        return self.c.fetchall()
+
+    def db_get_tweet_by_topic(self, topic):
+        self.c.execute("SELECT tweet_text, tweet_link, tweet_media_link FROM tweetset INNER JOIN tweets ON tweetset.tweetset_id=tweets.tweetset_id WHERE tweet_topic=? AND tweetset.twitter_tweets=TRUE", (topic,))
         return self.c.fetchall()
 
     def get_twitter_tweets(self):
@@ -267,7 +279,7 @@ class DataCollator:
         # divide by number of tweets to get average
         predictions /= len(tweets)
 
-        tweetset_id = self.db_create_tweetset(predictions)
+        tweetset_id = self.db_create_tweetset(predictions, True)
         for tweet in tweet_info:
             self.db_create_tweet(tweetset_id, tweet[0], tweet[1])
 

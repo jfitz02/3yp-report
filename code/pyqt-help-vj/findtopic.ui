@@ -56,7 +56,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="musicbutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -69,7 +69,7 @@
      <string>Music</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="mathematicsbutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -82,7 +82,7 @@
      <string>Mathematics</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="videogamesbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -95,20 +95,7 @@
      <string>Video Games</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_6">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>214</y>
-      <width>100</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Nature</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_7">
+   <widget class="QPushButton" name="philosophybutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -121,7 +108,7 @@
      <string>Philosophy</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_8">
+   <widget class="QPushButton" name="politicsbutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -134,7 +121,7 @@
      <string>Politics</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_9">
+   <widget class="QPushButton" name="lawbutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -147,7 +134,7 @@
      <string>Law</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_10">
+   <widget class="QPushButton" name="foodsbutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -160,7 +147,7 @@
      <string>Foods</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_11">
+   <widget class="QPushButton" name="culturebutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -173,7 +160,7 @@
      <string>Culture</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_12">
+   <widget class="QPushButton" name="disastersbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -186,7 +173,7 @@
      <string>Disasters</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_13">
+   <widget class="QPushButton" name="geographybutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -199,7 +186,7 @@
      <string>Geography</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_14">
+   <widget class="QPushButton" name="technologybutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -212,7 +199,7 @@
      <string>Technology</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_15">
+   <widget class="QPushButton" name="medicinebutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -225,7 +212,7 @@
      <string>Medicine</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_16">
+   <widget class="QPushButton" name="economicsbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -238,7 +225,7 @@
      <string>Economics</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_17">
+   <widget class="QPushButton" name="entertainmentbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -251,7 +238,7 @@
      <string>Entertainment</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_18">
+   <widget class="QPushButton" name="sportsbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -264,7 +251,7 @@
      <string>Sports</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_19">
+   <widget class="QPushButton" name="religionbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -277,7 +264,7 @@
      <string>Religion</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_20">
+   <widget class="QPushButton" name="educationbutton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -290,7 +277,7 @@
      <string>Education</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_21">
+   <widget class="QPushButton" name="businessbutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -303,7 +290,7 @@
      <string>Business</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_22">
+   <widget class="QPushButton" name="sciencebutton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -316,24 +303,11 @@
      <string>Science</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_23">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>470</y>
-      <width>100</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>News</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_24">
+   <widget class="QPushButton" name="historybutton">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>470</y>
+      <y>214</y>
       <width>100</width>
       <height>28</height>
      </rect>
@@ -356,19 +330,6 @@
     </property>
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_25">
-    <property name="geometry">
-     <rect>
-      <x>65</x>
-      <y>502</y>
-      <width>100</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PushButton</string>
     </property>
    </widget>
    <widget class="QTableWidget" name="tableWidget">

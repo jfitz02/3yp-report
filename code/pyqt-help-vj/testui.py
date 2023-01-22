@@ -5,8 +5,10 @@ from twitter_API import data_collator
 from twitter_API.data_collator import filename_creation
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import webbrowser
 import os
 import re
+import random
 import sqlite3 as sql
 
 id2label = {
@@ -34,7 +36,7 @@ id2label = {
 
 tweet_collator = data_collator.DataCollator("./twitter_API/pass.secret", id2label, )
 
-Ui_findTopic, _ = uic.loadUiType("findtopic.ui")
+Ui_findTopic, _ = uic.loadUiType("findtopic2.ui")
 Ui_topTopics, _ = uic.loadUiType("toptopics.ui")
 Ui_wordCloud, _ = uic.loadUiType("wordcloud.ui")
 
@@ -143,10 +145,6 @@ class Ui(QtWidgets.QMainWindow):
             lbl = "tl"
             prog = "tprog"
             top_topics = tweet_collator.db_get_top_topics(self.twitter_tweetset)
-        #generate probabilities for each topic
-        total = sum(top_topics.values())
-        for key in top_topics:
-            top_topics[key] = top_topics[key]/total
             
         # filter to only grab top 5 keys based on value
         top_topics = dict(sorted(top_topics.items(), key=lambda item: item[1], reverse=True)[:5])
@@ -164,6 +162,65 @@ class Ui(QtWidgets.QMainWindow):
         self.button1.clicked.connect(lambda : self.goto_page(self.wordCloud_widget))
         self.button2 = self.findTopics_widget.findChild(QtWidgets.QPushButton, 'pushButton_2')
         self.button2.clicked.connect(lambda : self.goto_page(self.topTopics_widget))
+
+        # loop through values of id2label
+        # for i, (key, value) in enumerate(id2label.items()):
+        #     print(f"button: {value}button, value: {value}")
+        #     self.findTopics_widget.findChild(QtWidgets.QPushButton, f"{value}button").clicked.connect(lambda : self.get_topic_tweets(value))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'medicine').clicked.connect(lambda : self.get_topic_tweets('medicine'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'business').clicked.connect(lambda : self.get_topic_tweets('business'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'videogames').clicked.connect(lambda : self.get_topic_tweets('videogames'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'education').clicked.connect(lambda : self.get_topic_tweets('education'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'religion').clicked.connect(lambda : self.get_topic_tweets('religion'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'science').clicked.connect(lambda : self.get_topic_tweets('science'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'philosophy').clicked.connect(lambda : self.get_topic_tweets('philosophy'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'politics').clicked.connect(lambda : self.get_topic_tweets('politics'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'music').clicked.connect(lambda : self.get_topic_tweets('music'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'sports').clicked.connect(lambda : self.get_topic_tweets('sports'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'law').clicked.connect(lambda : self.get_topic_tweets('law'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'culture').clicked.connect(lambda : self.get_topic_tweets('culture'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'economics').clicked.connect(lambda : self.get_topic_tweets('economics'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'geography').clicked.connect(lambda : self.get_topic_tweets('geography'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'technology').clicked.connect(lambda : self.get_topic_tweets('technology'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'mathematics').clicked.connect(lambda : self.get_topic_tweets('mathematics'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'history').clicked.connect(lambda : self.get_topic_tweets('history'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'foods').clicked.connect(lambda : self.get_topic_tweets('foods'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'disasters').clicked.connect(lambda : self.get_topic_tweets('disasters'))
+        self.findTopics_widget.findChild(QtWidgets.QPushButton, 'entertainment').clicked.connect(lambda : self.get_topic_tweets('entertainment'))
+
+    def clear_table(self):
+        # set all "tweet{i}" labels to empty string
+        for i in range(1, 5):
+            print(f"mb{i}")
+            self.findTopics_widget.findChild(QtWidgets.QLabel, f"tweet{i}").setText("")
+            self.findTopics_widget.findChild(QtWidgets.QPushButton, f"mb{i}").setText("")
+            self.findTopics_widget.findChild(QtWidgets.QPushButton, f"mb{i}").setEnabled(False)
+            self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i}").setText("")
+            self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i}").setEnabled(False)
+
+
+
+    def get_topic_tweets(self, topic):
+        print("getting topic tweets: ", topic)
+        self.clear_table()
+        all_topic_tweets = tweet_collator.db_get_tweet_by_topic(topic)
+        # get at most 4 tweets randomly
+        if len(all_topic_tweets) > 4:
+            all_topic_tweets = random.sample(all_topic_tweets, 4)
+
+        for i, tweet in enumerate(all_topic_tweets):
+            print(tweet)
+            self.findTopics_widget.findChild(QtWidgets.QLabel, f"tweet{i+1}").setText(tweet[0])
+            #check if tweet[2] is NoneType
+            if tweet[2] is not None and len(tweet[2]) > 0:
+                self.findTopics_widget.findChild(QtWidgets.QPushButton, f"mb{i+1}").setText("Media")
+                self.findTopics_widget.findChild(QtWidgets.QPushButton, f"mb{i+1}").setEnabled(True)
+                self.findTopics_widget.findChild(QtWidgets.QPushButton, f"mb{i+1}").clicked.connect(lambda : webbrowser.open(tweet[2]))
+            if tweet[1] is not None and len(tweet[1]) > 0:
+                self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i+1}").setText("Link")
+                self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i+1}").setEnabled(True)
+                self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i+1}").clicked.connect(lambda : webbrowser.open(tweet[1]))
+
 
     def goto_page(self, widget):
         index = self.stacked_widget.indexOf(widget)

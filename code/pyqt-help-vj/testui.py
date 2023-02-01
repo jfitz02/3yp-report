@@ -203,6 +203,7 @@ class Ui(QtWidgets.QMainWindow):
             
         # filter to only grab top 5 keys based on value
         top_topics = dict(sorted(topics.items(), key=lambda item: item[1], reverse=True)[:5])
+        print(top_topics)
         for i, (key, value) in enumerate(top_topics.items()):
             self.topTopics_widget.findChild(QtWidgets.QLabel, f"{lbl}{i+1}").setText(key)
             self.progress = self.topTopics_widget.findChild(QtWidgets.QProgressBar, f"{prog}{i+1}").setValue(int(value*100))
@@ -302,8 +303,6 @@ class Ui(QtWidgets.QMainWindow):
             if tweet[1] is not None and len(tweet[1]) > 0:
                 self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i+1}").setText("Link")
                 self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i+1}").setEnabled(True)
-                print(f"tb{i+1}")
-                print(tweet[1])
                 self.findTopics_widget.findChild(QtWidgets.QPushButton, f"tb{i+1}").clicked.connect(lambda state, x=tweet[1] : webbrowser.open(x))
 
 

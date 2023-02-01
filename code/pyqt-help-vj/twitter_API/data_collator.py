@@ -86,6 +86,7 @@ class DataCollator:
         self.labels = labels
         self.tokens = self.get_tokens(secrets)
         self.client = self.get_client()
+        self.APIv2 = self.get_APIv2()
         streaming_client = TestStreaming(self.tokens["bearer_token"], "tweets.txt")
         streaming_client.filter()
 
@@ -93,6 +94,9 @@ class DataCollator:
         self.database_setup()
 
         self.processor = TweetProcessor(labels)
+
+    def get_APIv2(self):
+        return tweepy.Client(self.tokens["bearer_token"], self.tokens["consumer_key"], self.tokens["consumer_secret"], self.tokens["access_token"], self.tokens["access_token_secret"])
 
     def database_connect(self):
         self.conn = sql.connect("twitter.db")
@@ -124,15 +128,21 @@ class DataCollator:
             entertainment_val FLOAT
         )""")
 
+        self.c.execute("""CREATE TABLE IF NOT EXISTS conversations (
+            conversation_id INTEGER PRIMARY KEY,
+            topic TEXT,
+            tweetset_id INTEGER,
+            FOREIGN KEY (tweetset_id) REFERENCES tweetset (tweetset_id)
+        )""")
+
 
         self.c.execute("""CREATE TABLE IF NOT EXISTS tweets (
             tweet_id INTEGER PRIMARY KEY,
-            tweetset_id INTEGER,
+            conversation_id INTEGER,
             tweet_text TEXT,
             tweet_link TEXT,
             tweet_media_link TEXT,
-            tweet_topic TEXT,
-            FOREIGN KEY (tweetset_id) REFERENCES tweetset (tweetset_id)
+            FOREIGN KEY (conversation_id) REFERENCES conversations (conversation_id)
         )""")
 
         self.c.execute("""CREATE TABLE IF NOT EXISTS hashtags (
@@ -163,36 +173,58 @@ class DataCollator:
         return api
 
     def get_tweets(self):
-        tweets = self.client.home_timeline(tweet_mode="extended", count=50)
+        tweetset_id = self.db_create_tweetset(False)
+        tweets = self.APIv2.get_home_timeline(tweet_fields=["author_id","conversation_id","in_reply_to_user_id","referenced_tweets","entities"],
+                                            expansions=["author_id", "in_reply_to_user_id", "referenced_tweets.id"], max_results=50)
         #sum together the prediction vectors for each tweet
         predictions = np.zeros(20)
-        tweet_info = []
-        for tweet in tweets:
-            pred = self.processor.predict(tweet.full_text)
-            tweet_info.append((tweet, self.labels[np.argmax(pred)]))
+        for tweet in tweets[0]:
+            convo_id = tweet["conversation_id"]
+            self.db_create_conversation(convo_id, tweetset_id)
+            self.db_create_tweet(tweetset_id, convo_id, tweet)
+            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet.id}", tweet_fields="entities")
+            text = tweet.text
+            if conversation.data is not None and len(conversation.data) > 0:
+                for convo in conversation[0]:
+                    text += " " + convo.text
+
+            pred = self.processor.predict(text)
+            self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred
 
-        predictions /= len(tweets)
+        predictions /= len(tweets[0])
 
-        tweetset_id = self.db_create_tweetset(predictions, False)
-        for tweet in tweet_info:
-            self.db_create_tweet(tweetset_id, tweet[0], tweet[1])
+        self.db_set_tweetset_scores(tweetset_id, predictions)
 
         return tweetset_id
 
-    def db_create_tweetset(self, preds, twitter_tweets):
-        preds = list(preds)
-        preds.insert(0, twitter_tweets)
-        self.c.execute("INSERT INTO tweetset VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", preds)
+    def db_create_tweetset(self, twitter_tweets):
+        self.c.execute("INSERT INTO tweetset VALUES (NULL, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)", (twitter_tweets,))
         self.conn.commit()
         return self.c.lastrowid
 
-    def db_create_tweet(self, tweetset_id, tweet, topic):
+    def db_set_tweetset_scores(self, tweetset_id, scores):
+        self.c.execute("UPDATE tweetset SET medicine_val=?, business_val=?, videogames_val=?, education_val=?, religion_val=?, science_val=?, philosophy_val=?, politics_val=?, music_val=?, sports_val=?, law_val=?, culture_val=?, economics_val=?, geography_val=?, technology_val=?, mathematics_val=?, history_val=?, foods_val=?, disasters_val=?, entertainment_val=? WHERE tweetset_id=?", (scores[0], scores[1], scores[2], scores[3], scores[4], scores[5], scores[6], scores[7], scores[8], scores[9], scores[10], scores[11], scores[12], scores[13], scores[14], scores[15], scores[16], scores[17], scores[18], scores[19], tweetset_id))
+        self.conn.commit()
+
+    def db_create_conversation(self, conversation_id, tweetset_id):
+        try:
+            self.c.execute("INSERT INTO conversations VALUES (?, NULL, ?)", (conversation_id, tweetset_id,))
+        except sql.IntegrityError as e:
+            print("conversation already exists")
+        self.conn.commit()
+        return self.c.lastrowid
+
+    def db_set_conversation_topic(self, conversation_id, topic):
+        self.c.execute("UPDATE conversations SET topic=? WHERE conversation_id=?", (topic, conversation_id))
+        self.conn.commit()
+
+    def db_create_tweet(self, tweetset_id, conversation_id, tweet):
         url = self.find_media_url(tweet)
         if url is not None:
-            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?, ?)", (tweetset_id, tweet.full_text, "https://twitter.com/twitter/statuses/"+str(tweet.id), url[1], topic))
+            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet.text, "https://twitter.com/twitter/statuses/"+str(tweet.id), url[1]))
         else:
-            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?, ?)", (tweetset_id, tweet.full_text, "https://twitter.com/twitter/statuses/"+str(tweet.id), None, topic))
+            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet.text, "https://twitter.com/twitter/statuses/"+str(tweet.id), None))
         
         #find hashtags
         last_tweet_id = self.c.lastrowid
@@ -203,13 +235,18 @@ class DataCollator:
 
     def find_hashtags(self, tweet):
         hashtags = []
-        for hashtag in tweet.entities["hashtags"]:
-            hashtags.append(hashtag["text"])
+        try:
+            for hashtag in tweet.entities["hashtags"]:
+                hashtags.append(hashtag["tag"])
+        except KeyError:
+            pass
+        except TypeError:
+            print("no entities")
 
         return hashtags
 
     def db_get_hashtags_for_topic(self, tweetset_id, topic):
-        self.c.execute("SELECT hashtag FROM hashtags WHERE tweetset_id=? AND tweet_id IN (SELECT tweet_id FROM tweets WHERE tweet_topic=?)", (tweetset_id, topic))
+        self.c.execute("SELECT hashtag FROM hashtags WHERE tweetset_id=? AND tweet_id IN (SELECT tweet_id FROM tweets INNER JOIN conversations ON tweets.conversation_id=conversations.conversation_id WHERE conversations.topic=?)", (tweetset_id, topic))
         return self.c.fetchall()
 
     def db_get_top_topics(self, tweetset_id):
@@ -223,11 +260,12 @@ class DataCollator:
         return topics
 
     def db_get_tweets(self, tweetset_id):
-        self.c.execute("SELECT tweet_text FROM tweets WHERE tweetset_id=?", (tweetset_id,))
+        # use tweetset to get conversations then get tweets for each conversation
+        self.c.execute("SELECT tweets.tweet_text, tweets.tweet_link, tweets.tweet_media_link, conversations.topic FROM tweets INNER JOIN conversations ON tweets.conversation_id=conversations.conversation_id WHERE conversations.tweetset_id=?", (tweetset_id,))
         return self.c.fetchall()
 
     def db_get_tweet_by_topic(self, topic):
-        self.c.execute("SELECT tweet_text, tweet_link, tweet_media_link FROM tweetset INNER JOIN tweets ON tweetset.tweetset_id=tweets.tweetset_id WHERE tweet_topic=? AND tweetset.twitter_tweets=TRUE", (topic,))
+        self.c.execute("SELECT tweet_text, tweet_link, tweet_media_link FROM tweetset INNER JOIN conversations ON tweetset.tweetset_id=conversations.tweetset_id INNER JOIN tweets ON conversations.conversation_id=tweets.conversation_id WHERE conversations.topic=?", (topic,))
         return self.c.fetchall()
 
     def get_twitter_tweets(self):
@@ -236,30 +274,41 @@ class DataCollator:
             for line in f:
                 parts = line.split(" ")
                 tweet_id = int(parts[-1])
-                try:
+                found_tweet = self.get_tweet(tweet_id)
+                if found_tweet.data is not None:
                     tweets.append(self.get_tweet(tweet_id))
-                except tweepy.errors.NotFound:
+                else:
                     print(f"{tweet_id} not found")
-                    pass
+
+        tweetset_id = self.db_create_tweetset(True)
 
         predictions = np.zeros(20)
-        tweet_info = []
         for tweet in tweets:
-            pred = self.processor.predict(tweet.full_text)
-            tweet_info.append((tweet, self.labels[np.argmax(pred)]))
+            tweet = tweet[0]
+            convo_id = tweet["conversation_id"]
+            self.db_create_conversation(convo_id, tweetset_id)
+            self.db_create_tweet(tweetset_id, convo_id, tweet)
+            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet.id}", tweet_fields="entities")
+            text = tweet.text
+            if conversation.data is not None and len(conversation.data) > 0:
+                for convo in conversation[0]:
+                    text += " " + convo.text
+
+            pred = self.processor.predict(text)
+            self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred
 
         # divide by number of tweets to get average
         predictions /= len(tweets)
 
-        tweetset_id = self.db_create_tweetset(predictions, True)
-        for tweet in tweet_info:
-            self.db_create_tweet(tweetset_id, tweet[0], tweet[1])
+        # update tweetset with predictions
+        self.db_set_tweetset_scores(tweetset_id, predictions)
 
         return tweetset_id
 
     def get_tweet(self, tweet_id:int):
-        tweet = self.client.get_status(tweet_id, tweet_mode="extended")
+        tweet = self.APIv2.get_tweet(tweet_id, tweet_fields=["author_id","conversation_id","in_reply_to_user_id","referenced_tweets","entities"],
+                                            expansions=["author_id", "in_reply_to_user_id", "referenced_tweets.id"])
         return tweet
 
     def find_media_url(self, tweet):

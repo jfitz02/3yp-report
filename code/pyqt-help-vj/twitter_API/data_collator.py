@@ -71,7 +71,7 @@ class TestStreaming(tweepy.StreamingClient):
                 f.write(tofile)
 
             self.received += 1
-            if self.received > 50:
+            if self.received > 100:
                 print("Disconnecting because found tweets")
                 self.disconnect()
 
@@ -85,7 +85,6 @@ class DataCollator:
     def __init__(self, secrets:str, labels):
         self.labels = labels
         self.tokens = self.get_tokens(secrets)
-        self.client = self.get_client()
         self.APIv2 = self.get_APIv2()
         streaming_client = TestStreaming(self.tokens["bearer_token"], "tweets.txt")
         streaming_client.filter()
@@ -175,7 +174,7 @@ class DataCollator:
     def get_tweets(self):
         tweetset_id = self.db_create_tweetset(False)
         tweets = self.APIv2.get_home_timeline(tweet_fields=["author_id","conversation_id","in_reply_to_user_id","referenced_tweets","entities"],
-                                            expansions=["author_id", "in_reply_to_user_id", "referenced_tweets.id"], max_results=50)
+                                            expansions=["author_id", "in_reply_to_user_id", "referenced_tweets.id"], max_results=100)
         #sum together the prediction vectors for each tweet
         predictions = np.zeros(20)
         for tweet in tweets[0]:
@@ -188,6 +187,8 @@ class DataCollator:
                 for convo in conversation[0]:
                     text += " " + convo.text
 
+            if len(text) > 512:
+                text = text[:512]
             pred = self.processor.predict(text)
             self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred
@@ -284,6 +285,9 @@ class DataCollator:
 
         predictions = np.zeros(20)
         for tweet in tweets:
+            if tweet is None:
+                print("tweet is none")
+                continue
             tweet = tweet[0]
             convo_id = tweet["conversation_id"]
             self.db_create_conversation(convo_id, tweetset_id)
@@ -294,6 +298,8 @@ class DataCollator:
                 for convo in conversation[0]:
                     text += " " + convo.text
 
+            if len(text) > 512:
+                text = text[:512]
             pred = self.processor.predict(text)
             self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred

@@ -2,9 +2,7 @@ import tweepy
 import sqlite3 as sql
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
-import requests
-import librosa
+from mock_api import MockStreamer, MockAPI
 import moviepy.editor as mp
 import re
 
@@ -47,11 +45,11 @@ class TweetProcessor:
         return pred
 
 
-class TestStreaming(tweepy.StreamingClient):
+class TestStreaming(MockStreamer):
     def __init__(self, bearer_token, twitterfname):
-        super().__init__(bearer_token=bearer_token) # set up StreamingClient
-        self.received = 0 # received tweet count to limit number of tweets received
-        self.twitterfname = twitterfname # filename to store tweets
+        super().__init__(bearer_token=bearer_token)
+        self.received = 0
+        self.twitterfname = twitterfname
         with open(self.twitterfname, 'w') as f:
             f.write("")
 
@@ -59,21 +57,19 @@ class TestStreaming(tweepy.StreamingClient):
         print("Connected to streaming API")
 
     def on_tweet(self, tweet):
-        tweettext = tweet.text.replace("\n", " ") # get tweet text with newlines removed
-        tofile = tweettext + " " + str(tweet.id)+"\n" # add tweetid
-
-        #check tweetid doesn't already exist
+        #remove emojis and new line characters
+        tweettext = tweet["text"].replace("\n", " ")
+        tofile = tweettext + " " + str(tweet["id"])+"\n"
         with open(self.twitterfname, 'r', encoding="utf-8") as f:
             exists = (tofile in f.read())
 
         if not exists:
-            # write tweet and tweetid to file
             with open(self.twitterfname, 'a', encoding="utf-8") as f:
                 #write the tweet text, tweet id
                 f.write(tofile)
 
             self.received += 1
-            if self.received > 100:
+            if self.received > 50:
                 print("Disconnecting because found tweets")
                 self.disconnect()
 
@@ -87,7 +83,7 @@ class DataCollator:
     def __init__(self, secrets:str, labels):
         self.labels = labels
         self.tokens = self.get_tokens(secrets)
-        self.APIv2 = self.get_APIv2()
+        self.APIv2 = MockAPI()
         streaming_client = TestStreaming(self.tokens["bearer_token"], "tweets.txt")
         streaming_client.filter()
 
@@ -96,31 +92,8 @@ class DataCollator:
 
         self.processor = TweetProcessor(labels)
 
-    def get_tokens(self, filename:str):
-        token_dict = {}
-        with open(filename, 'r') as f:
-            for line in f:
-                parts = line.split("=")
-                token_dict[parts[0].strip()] = parts[1].strip()
-
-        return token_dict
-
-    def get_client(self):
-        # twitter API v1.1
-        api = tweepy.API(auth=tweepy.OAuthHandler(self.tokens["consumer_key"],
-                                                    self.tokens["consumer_secret"],
-                                                    self.tokens["access_token"],
-                                                    self.tokens["access_token_secret"]))
-
-        return api
-
     def get_APIv2(self):
-        # twitter API v2
-        return tweepy.Client(self.tokens["bearer_token"],
-                                self.tokens["consumer_key"], 
-                                self.tokens["consumer_secret"], 
-                                self.tokens["access_token"], 
-                                self.tokens["access_token_secret"])
+        return tweepy.Client(self.tokens["bearer_token"], self.tokens["consumer_key"], self.tokens["consumer_secret"], self.tokens["access_token"], self.tokens["access_token_secret"])
 
     def database_connect(self):
         self.conn = sql.connect("twitter.db")
@@ -179,52 +152,45 @@ class DataCollator:
 
         self.conn.commit()
 
+    def get_tokens(self, filename:str):
+        token_dict = {}
+        with open(filename, 'r') as f:
+            for line in f:
+                parts = line.split("=")
+                token_dict[parts[0].strip()] = parts[1].strip()
+
+        return token_dict
+
+    def get_client(self):
+        api = tweepy.API(auth=tweepy.OAuthHandler(self.tokens["consumer_key"],
+                                                    self.tokens["consumer_secret"],
+                                                    self.tokens["access_token"],
+                                                    self.tokens["access_token_secret"]))
+
+        return api
 
     def get_tweets(self):
         tweetset_id = self.db_create_tweetset(False)
-
-        # grab tweets from home timeline
-        tweets = self.APIv2.get_home_timeline(tweet_fields=["author_id",
-                                                            "conversation_id",
-                                                            "in_reply_to_user_id",
-                                                            "referenced_tweets",
-                                                            "entities"],
-                                            expansions=["author_id",
-                                                        "in_reply_to_user_id",
-                                                        "referenced_tweets.id"], 
-                                                        max_results=100)
-        
+        tweets = self.APIv2.get_home_timeline(tweet_fields=["author_id","conversation_id","in_reply_to_user_id","referenced_tweets","entities"],
+                                            expansions=["author_id", "in_reply_to_user_id", "referenced_tweets.id"], max_results=50)
         #sum together the prediction vectors for each tweet
         predictions = np.zeros(20)
-        for tweet in tweets[0]:
-
-            #grab conversation_id and create conversation
+        for tweet in tweets["data"]:
             convo_id = tweet["conversation_id"]
             self.db_create_conversation(convo_id, tweetset_id)
             self.db_create_tweet(tweetset_id, convo_id, tweet)
+            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet['id']}", tweet_fields="entities")
+            text = tweet["text"]
+            if conversation["data"] is not None and len(conversation["data"]) > 0:
+                for convo in conversation["data"]:
+                    text += " " + convo["text"]
 
-            # use conversation_id to grab all retweets/comments
-            conversation = self.APIv2.search_recent_tweets(
-                query=f"conversation_id:{tweet.id}", tweet_fields="entities"
-            )
-            text = tweet.text
-            if conversation.data is not None and len(conversation.data) > 0:
-                for convo in conversation[0]:
-                    text += " " + convo.text
-
-            # filter input length to be below maximum allowed
-            if len(text) > 512:
-                text = text[:512]
-
-            
-            # make prediction and store individual tweets top conversation
             pred = self.processor.predict(text)
             self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred
 
-        predictions /= len(tweets[0])
+        predictions /= len(tweets["data"])
 
-        # store normalised prediction valuesa cross all tweets in tweetset
         self.db_set_tweetset_scores(tweetset_id, predictions)
 
         return tweetset_id
@@ -253,9 +219,9 @@ class DataCollator:
     def db_create_tweet(self, tweetset_id, conversation_id, tweet):
         url = self.find_media_url(tweet)
         if url is not None:
-            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet.text, "https://twitter.com/twitter/statuses/"+str(tweet.id), url[1]))
+            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet["text"], "https://twitter.com/twitter/statuses/"+str(tweet["id"]), url[1]))
         else:
-            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet.text, "https://twitter.com/twitter/statuses/"+str(tweet.id), None))
+            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet["text"], "https://twitter.com/twitter/statuses/"+str(tweet["id"]), None))
         
         #find hashtags
         last_tweet_id = self.c.lastrowid
@@ -267,7 +233,7 @@ class DataCollator:
     def find_hashtags(self, tweet):
         hashtags = []
         try:
-            for hashtag in tweet.entities["hashtags"]:
+            for hashtag in tweet["entities"]["hashtags"]:
                 hashtags.append(hashtag["tag"])
         except KeyError:
             pass
@@ -306,8 +272,8 @@ class DataCollator:
                 parts = line.split(" ")
                 tweet_id = int(parts[-1])
                 found_tweet = self.get_tweet(tweet_id)
-                if found_tweet.data is not None:
-                    tweets.append(self.get_tweet(tweet_id))
+                if found_tweet["data"] is not None:
+                    tweets.append(found_tweet)
                 else:
                     print(f"{tweet_id} not found")
 
@@ -315,21 +281,17 @@ class DataCollator:
 
         predictions = np.zeros(20)
         for tweet in tweets:
-            if tweet is None:
-                print("tweet is none")
-                continue
-            tweet = tweet[0]
+            tweet = tweet["data"]
             convo_id = tweet["conversation_id"]
             self.db_create_conversation(convo_id, tweetset_id)
             self.db_create_tweet(tweetset_id, convo_id, tweet)
-            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet.id}", tweet_fields="entities")
-            text = tweet.text
-            if conversation.data is not None and len(conversation.data) > 0:
-                for convo in conversation[0]:
-                    text += " " + convo.text
+            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet['id']}", tweet_fields="entities")
+            text = tweet["text"]
+            print(conversation)
+            if conversation["data"] is not None and len(conversation["data"]) > 0:
+                for convo in conversation["data"]:
+                    text += " " + convo["text"]
 
-            if len(text) > 512:
-                text = text[:512]
             pred = self.processor.predict(text)
             self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred
@@ -370,3 +332,37 @@ class DataCollator:
                     break
 
         return (content_type, media_url)
+
+
+id2label = {
+    0: "medicine",
+    1: "business",
+    2: "videogames",
+    3: "education",
+    4: "religion",
+    5: "science",
+    6: "philosophy",
+    7: "politics",
+    8: "music",
+    9: "sports",
+    10: "law",
+    11: "culture",
+    12: "economics",
+    13: "geography",
+    14: "technology",
+    15: "mathematics",
+    16: "history",
+    17: "foods",
+    18: "disasters",
+    19: "entertainment"
+}
+
+def main():
+    dc = DataCollator("pass.secret", id2label)
+    tweetset_id = dc.get_twitter_tweets()
+    print(tweetset_id)
+    tweetset_id = dc.get_tweets()
+    print(tweetset_id)
+
+if __name__ == "__main__":
+    main()

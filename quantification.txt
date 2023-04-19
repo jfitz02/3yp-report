@@ -1,0 +1,89 @@
+top 1 quantification
+count based throughout the feed 
+e.g.
+    tweet 1: Sport
+    tweet 2: News
+    tweet 3: Sport
+    tweet 4: Video Games
+    tweet 5: Sport
+    tweet 6: Video Games
+    tweet 7: Video Games
+    tweet 8: News
+
+    Sport = 3
+    Video Games = 3
+    News = 2
+
+top 1 quantification, order-dependent
+count based representation that scales linearly through time
+e.g.
+    tweet 1: Sport (*1)
+    tweet 2: News (*.875)
+    tweet 3: Sport (*.75)
+    tweet 4: Video Games (*.625)
+    tweet 5: Sport (*.5)
+    tweet 6: Video Games (*.375)
+    tweet 7: Video Games (*.25)
+    tweet 8: News (*.125)
+
+    Sport = 2.25
+    Video Games = 1.25
+    News = 1
+
+top 3 quantification
+Look at top 3 chosen topics, establish a normal distribution to normalise the scores
+e.g.
+    tweet 1: Sport (0.95) Video Games (0.80) News (0.5)
+    tweet 2: News (*.875) Politics (.8) Business (.65)
+    tweet 3: Sport (*.75) News (0.5) Politics (.2)
+    tweet 4: Video Games (*.95) Sport (0.9) Business (0.5)
+    
+    tweet 1: mean=0.75 stddev=0.187
+    tweet 2: mean=0.775, stddev=0.094
+    tweet 3: mean=0.483 , stddev=0.225
+    tweet 4: mean=0.78 , stddev=0.201
+
+    updated weights
+
+    tweet 1: Sport (0.85758) Video Games (0.60541) News (0.09063)
+    tweet 2: News (0.8563) Politics (0.60486) Business (0.09179)
+    tweet 3: Sport (0.88232) News (0.53011) Politics (.10424)
+    tweet 4: Video Games (0.80116) Sport (0.72475) Business (0.0818) 
+
+    Sport = 2.465
+    News = 1.477
+    Video Games = 1.407
+    Politics = 0.709
+    Business = 0.174
+
+top 3 quantification, linearly scaled over time
+Look at top 3 chosen topics, establish a normal distribution to normalise the scores
+e.g.
+    tweet 1: Sport (0.95) Video Games (0.80) News (0.5)
+    tweet 2: News (*.875) Politics (.8) Business (.65)
+    tweet 3: Sport (*.75) News (0.5) Politics (.2)
+    tweet 4: Video Games (*.95) Sport (0.9) Business (0.5)
+    
+    tweet 1: mean=0.75 stddev=0.187
+    tweet 2: mean=0.775, stddev=0.094
+    tweet 3: mean=0.483 , stddev=0.225
+    tweet 4: mean=0.78 , stddev=0.201
+
+    updated weights
+
+    tweet 1: Sport (0.85758) Video Games (0.60541) News (0.09063) - *1
+    tweet 2: News (0.8563) Politics (0.60486) Business (0.09179) - *.75
+    tweet 3: Sport (0.88232) News (0.53011) Politics (.10424) - *.5
+    tweet 4: Video Games (0.80116) Sport (0.72475) Business (0.0818) - *.25
+
+    Sport = 1.480
+    News = 0.998
+    Video Games = 0.806
+    Politics = 0.506
+    Business = 0.089
+
+Merge all tweets into a large dump of text
+take verbatim model output
+
+Merge all tweets into a large dump of text
+take normalised model output.

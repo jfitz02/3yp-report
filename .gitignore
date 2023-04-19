@@ -286,3 +286,11 @@ TSWLatexianTemp*
 
 *.png
 *.jpg
+*.mp4
+*.wav
+
+# Ignore everything in any directory having /logs/ in its path
+code/BERT/RoBERTa/logs/*
+
+# ignore pycache
+__pycache__/

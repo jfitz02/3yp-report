@@ -4,19 +4,16 @@ import json
 import random
 
 class MockAPI:
-    def __init__(self):
-        return
-
     def get_tweet(self, tweet_id, tweet_fields=None, expansions=None):
         tweet_id = str(tweet_id)
-        with open("tweets.json", 'r') as f:
+        with open("./twitter_API/tweets.json", 'r') as f:
             tweets = json.load(f)
 
         for tweet in tweets:
             if tweet["id"] == tweet_id:
                 return {"data":tweet}
 
-        with open("your_tweets.json", 'r') as f:
+        with open("./twitter_API/your_tweets.json", 'r') as f:
             your_tweets = json.load(f)
 
         for tweet in your_tweets:
@@ -27,7 +24,7 @@ class MockAPI:
 
     def get_tweets(self, tweet_fields=None, expansions=None, count=50):
         #randomly select count number of tweets from tweets.json
-        with open("tweets.json", 'r') as f:
+        with open("./twitter_API/tweets.json", 'r') as f:
             tweets = json.load(f)
 
         return random.sample(tweets, count)
@@ -40,16 +37,16 @@ class MockAPI:
         return {"data":self._get_conversation(convo_id)}
 
     def get_home_timeline(self, tweet_fields=None, expansions=None, max_results=50):
-        with open("your_tweets.json", 'r') as f:
+        with open("./twitter_API/your_tweets.json", 'r') as f:
             your_tweets = json.load(f)
 
         return {"data":random.sample(your_tweets, max_results)}
 
     def _get_conversation(self, convo_id):
-        with open("tweets.json", 'r') as f:
+        with open("./twitter_API/tweets.json", 'r') as f:
             tweets = json.load(f)
 
-        with open("your_tweets.json", 'r') as f:
+        with open("./twitter_API/your_tweets.json", 'r') as f:
             your_tweets = json.load(f)
 
         convo = []

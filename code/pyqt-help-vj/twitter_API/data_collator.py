@@ -1,4 +1,9 @@
 import tweepy
+try:
+    from twitter_API.mock_api import MockAPI, MockStreamer
+except ModuleNotFoundError:
+    from mock_api import MockAPI, MockStreamer
+
 import sqlite3 as sql
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -47,7 +52,7 @@ class TweetProcessor:
         return pred
 
 
-class TestStreaming(tweepy.StreamingClient):
+class TestStreaming(MockStreamer):
     def __init__(self, bearer_token, twitterfname):
         super().__init__(bearer_token=bearer_token) # set up StreamingClient
         self.received = 0 # received tweet count to limit number of tweets received
@@ -59,8 +64,8 @@ class TestStreaming(tweepy.StreamingClient):
         print("Connected to streaming API")
 
     def on_tweet(self, tweet):
-        tweettext = tweet.text.replace("\n", " ") # get tweet text with newlines removed
-        tofile = tweettext + " " + str(tweet.id)+"\n" # add tweetid
+        tweettext = tweet["text"].replace("\n", " ") # get tweet text with newlines removed
+        tofile = tweettext + " " + str(tweet["id"])+"\n" # add tweetid
 
         #check tweetid doesn't already exist
         with open(self.twitterfname, 'r', encoding="utf-8") as f:
@@ -106,21 +111,23 @@ class DataCollator:
         return token_dict
 
     def get_client(self):
+        api = MockAPI()
         # twitter API v1.1
-        api = tweepy.API(auth=tweepy.OAuthHandler(self.tokens["consumer_key"],
-                                                    self.tokens["consumer_secret"],
-                                                    self.tokens["access_token"],
-                                                    self.tokens["access_token_secret"]))
+        # api = tweepy.API(auth=tweepy.OAuthHandler(self.tokens["consumer_key"],
+        #                                             self.tokens["consumer_secret"],
+        #                                             self.tokens["access_token"],
+        #                                             self.tokens["access_token_secret"]))
 
         return api
 
     def get_APIv2(self):
+        return MockAPI()
         # twitter API v2
-        return tweepy.Client(self.tokens["bearer_token"],
-                                self.tokens["consumer_key"], 
-                                self.tokens["consumer_secret"], 
-                                self.tokens["access_token"], 
-                                self.tokens["access_token_secret"])
+        # return tweepy.Client(self.tokens["bearer_token"],
+        #                         self.tokens["consumer_key"], 
+        #                         self.tokens["consumer_secret"], 
+        #                         self.tokens["access_token"], 
+        #                         self.tokens["access_token_secret"])
 
     def database_connect(self):
         self.conn = sql.connect("twitter.db")
@@ -196,7 +203,7 @@ class DataCollator:
         
         #sum together the prediction vectors for each tweet
         predictions = np.zeros(20)
-        for tweet in tweets[0]:
+        for tweet in tweets["data"]:
 
             #grab conversation_id and create conversation
             convo_id = tweet["conversation_id"]
@@ -205,12 +212,12 @@ class DataCollator:
 
             # use conversation_id to grab all retweets/comments
             conversation = self.APIv2.search_recent_tweets(
-                query=f"conversation_id:{tweet.id}", tweet_fields="entities"
+                query=f"conversation_id:{tweet['id']}", tweet_fields="entities"
             )
-            text = tweet.text
-            if conversation.data is not None and len(conversation.data) > 0:
-                for convo in conversation[0]:
-                    text += " " + convo.text
+            text = tweet["text"]
+            if conversation["data"] is not None and len(conversation["data"]) > 0:
+                for convo in conversation["data"]:
+                    text += " " + convo["text"]
 
             # filter input length to be below maximum allowed
             if len(text) > 512:
@@ -222,7 +229,7 @@ class DataCollator:
             self.db_set_conversation_topic(convo_id, self.labels[np.argmax(pred)])
             predictions += pred
 
-        predictions /= len(tweets[0])
+        predictions /= len(tweets["data"])
 
         # store normalised prediction valuesa cross all tweets in tweetset
         self.db_set_tweetset_scores(tweetset_id, predictions)
@@ -242,7 +249,7 @@ class DataCollator:
         try:
             self.c.execute("INSERT INTO conversations VALUES (?, NULL, ?)", (conversation_id, tweetset_id,))
         except sql.IntegrityError as e:
-            print("conversation already exists")
+            pass
         self.conn.commit()
         return self.c.lastrowid
 
@@ -253,9 +260,9 @@ class DataCollator:
     def db_create_tweet(self, tweetset_id, conversation_id, tweet):
         url = self.find_media_url(tweet)
         if url is not None:
-            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet.text, "https://twitter.com/twitter/statuses/"+str(tweet.id), url[1]))
+            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet["text"], "https://twitter.com/twitter/statuses/"+str(tweet["id"]), url[1]))
         else:
-            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet.text, "https://twitter.com/twitter/statuses/"+str(tweet.id), None))
+            self.c.execute("INSERT INTO tweets VALUES (NULL, ?, ?, ?, ?)", (conversation_id, tweet["text"], "https://twitter.com/twitter/statuses/"+str(tweet["id"]), None))
         
         #find hashtags
         last_tweet_id = self.c.lastrowid
@@ -267,7 +274,7 @@ class DataCollator:
     def find_hashtags(self, tweet):
         hashtags = []
         try:
-            for hashtag in tweet.entities["hashtags"]:
+            for hashtag in tweet["entities"]["hashtags"]:
                 hashtags.append(hashtag["tag"])
         except KeyError:
             pass
@@ -306,8 +313,8 @@ class DataCollator:
                 parts = line.split(" ")
                 tweet_id = int(parts[-1])
                 found_tweet = self.get_tweet(tweet_id)
-                if found_tweet.data is not None:
-                    tweets.append(self.get_tweet(tweet_id))
+                if found_tweet["data"] is not None:
+                    tweets.append(found_tweet)
                 else:
                     print(f"{tweet_id} not found")
 
@@ -318,15 +325,15 @@ class DataCollator:
             if tweet is None:
                 print("tweet is none")
                 continue
-            tweet = tweet[0]
+            tweet = tweet["data"]
             convo_id = tweet["conversation_id"]
             self.db_create_conversation(convo_id, tweetset_id)
             self.db_create_tweet(tweetset_id, convo_id, tweet)
-            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet.id}", tweet_fields="entities")
-            text = tweet.text
-            if conversation.data is not None and len(conversation.data) > 0:
-                for convo in conversation[0]:
-                    text += " " + convo.text
+            conversation = self.APIv2.search_recent_tweets(query=f"conversation_id:{tweet['id']}", tweet_fields="entities")
+            text = tweet["text"]
+            if conversation["data"] is not None and len(conversation["data"]) > 0:
+                for convo in conversation["data"]:
+                    text += " " + convo["text"]
 
             if len(text) > 512:
                 text = text[:512]
@@ -351,12 +358,14 @@ class DataCollator:
         media_url = ""
         content_type = ""
         try:
-            if not ("media" in tweet.extended_entities):
+            if not ("media" in tweet["entities"]):
                 return None
         except AttributeError:
             return None
+        except KeyError:
+            return None
         
-        media = tweet.extended_entities["media"][0]
+        media = tweet["extended_entities"]["media"][0]
         if media["type"] == "photo":
             content_type = "photo"
             media_url = media["media_url_https"]
